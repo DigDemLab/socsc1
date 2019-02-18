@@ -17,7 +17,8 @@
 # 5) Data Transformations for Descriptives
 # 6) Some first descriptive stats about the URLs
 # 7) Term-Frequencies
-# 8) # Sentiment Differences from polls between papers
+# 8) Sentiment Differences from polls between papers
+# 9) Sentiment Validierung an no-billag
 ##################################################################################################
 # 1) Dependencies: 
 ##################################################################################################
@@ -538,4 +539,58 @@ pap5 <- ggplot(dfplotpaperallpoll) +
 
 ggsave("Sent_Diff_by_Papers.png", pap5, device = "png", width = 6, height = 9, dpi = 300)
 ggsave("Sent_Diff_by_Papers.pdf", pap5, device = "pdf", width = 6, height = 9, dpi = 300)
+##################################################################################################
+# 9) Sentiment Validierung an no-billag
+##################################################################################################
+nobilldf <- df %>% filter(poll == "no-billag") %>% filter(language == "german")
+
+top_pos_words_nobillag <- textstat_frequency(dfm(nobilldf$pos_words), n = 25, groups = nobilldf$poll)
+top_neg_words_nobillag <- textstat_frequency(dfm(nobilldf$neg_words), n = 25, groups = nobilldf$poll)
+
+### Plot for overall...
+g <- ggplot(top_pos_words_nobillag) +
+  geom_bar(aes(x = reorder(feature, frequency), y = frequency/1000), stat="identity", color = "#0099f6", fill = "#0099f6") + 
+  labs(title = "Most frequent postive words:", y = "Frequency (in thousands)", x = "Word") +
+  theme_bw() +
+  scale_y_continuous(limits = c(0,4.5)) +
+  coord_flip()
+g
+h <- ggplot(top_neg_words_nobillag) +
+  geom_bar(aes(x = reorder(feature, frequency), y = frequency/1000), stat="identity", color = "#df0000", fill = "#df0000") + 
+  labs(title = "Most frequent negative words:", y = "Frequency (in thousands)", x = "Word") +
+  theme_bw() +
+  scale_y_continuous(limits = c(0,4.5)) +
+  coord_flip()
+h
+gh <- cowplot::plot_grid(g,h, align = "h", axis = "l")
+title <- cowplot::ggdraw() + 
+  cowplot::draw_label(paste0("25 most frequent positive and negative words in all german URL's for the no-billag initiative"))
+
+gh <- cowplot::plot_grid(title, gh, ncol = 1, rel_heights = c(0.1,1))
+gh
+ggsave("Word_Freq_no_billag.png", gh, device = "png", width = 8, height = 6, dpi = 300)
+ggsave("Word_Freq_no_billag.pdf", gh, device = "pdf", width = 8, height = 6, dpi = 300)
+library(wordcloud)
+library(reshape2)
+
+top_pos_words_nobillag <- textstat_frequency(dfm(nobilldf$pos_words), n = 100, groups = nobilldf$poll)
+top_neg_words_nobillag <- textstat_frequency(dfm(nobilldf$neg_words), n = 100, groups = nobilldf$poll)
+
+top_neg_words_nobillag$sent <- "negative terms"
+top_pos_words_nobillag$sent <- "positive terms"
+clouddf <- rbind(top_neg_words_nobillag, top_pos_words_nobillag)
+set.seed(1234)
+
+clouddf %>% acast(feature ~ sent, value.var = "frequency", fill = 0) %>%
+                  comparison.cloud(colors = c("#df0000", "#0099f6"),  
+                                   max.words = 100, title.bg.colors = "white",
+                                   title.colors = c("#df0000", "#0099f6"), rot.per = .25)
+
+
+
+clouddf$word <- clouddf$feature
+clouddf$freq <- clouddf$frequency
+clouddf$color <- ifelse(clouddf$sent == "negative", "#df0000", "#0099f6")
+cloudpp = wordcloud2::wordcloud2(clouddf,  color = clouddf$color, size =.6, shape = "circle")
+cloudpp
 ##################################################################################################

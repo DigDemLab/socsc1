@@ -315,7 +315,7 @@ dfsentpol <- df %>% group_by(poll) %>% summarize(Avg = mean(sentiment, na.rm = T
 e <- ggplot(df, aes(x=sentiment)) + 
         geom_histogram(aes(y=..density..), binwidth=.5, colour="black", fill="white") +
         geom_density(alpha=.4, fill="#df0000") +
-        labs(title = "Distribution of Sentiment", y = "Density ", x ="Sentiment [neg. - pos.]") +
+        labs(title = "Distribution of Sentiment", y = "Density ", x ="Sentiment") +
         geom_text(data = dfsentpol, aes(y = .9, x = 2, label = paste0("n = ",SUM))) +
         facet_wrap(~poll) +
         theme_bw()
@@ -327,7 +327,7 @@ ggsave("Sent_Dist_by_Poll.pdf", e, device = "pdf", width = 8, height = 6, dpi = 
 f <- ggplot(df, aes(x=sentiment)) + 
         geom_histogram(aes(y=..density.., fill=initiative), alpha=.5, binwidth=.5, colour="black", position="dodge") +
         geom_density(aes(fill=initiative, color=initiative), alpha=.3) +
-        labs(title = "Distribution of Sentiment", y = "Density ", x ="Sentiment [neg. - pos.]") +
+        labs(title = "Distribution of Sentiment", y = "Density ", x ="Sentiment") +
         theme_bw() +
         geom_text(data = dfplotinitiative, aes(y = .8, x = 2, label = paste0("n (Initiatives) = ",SUM[1],"\nn (Referenda) = ", SUM[2]))) +
         scale_fill_startrek(name="Poll Type:",
